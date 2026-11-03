@@ -150,12 +150,15 @@ def _folder_names(client: GraphClient) -> dict[str, str]:
 def to_item(msg: dict, folders: dict[str, str] | None = None) -> dict:
     flag = (msg.get("flag") or {}).get("flagStatus")
     folder_id = msg.get("parentFolderId")
+    sender = ((msg.get("from") or {}).get("emailAddress") or {})
     return {
         "id": msg.get("id"),
         "messageId": msg.get("internetMessageId"),
         "conversationId": msg.get("conversationId"),
         "subject": msg.get("subject"),
         "from": _address(msg.get("from")),
+        "fromName": sender.get("name"),
+        "fromAddress": sender.get("address"),
         "to": _addresses(msg.get("toRecipients")),
         "cc": _addresses(msg.get("ccRecipients")),
         "date": local_iso(msg.get("receivedDateTime")),

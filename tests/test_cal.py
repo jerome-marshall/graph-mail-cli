@@ -49,6 +49,8 @@ EVENT_KEYS = {
     "location",
     "organizer",
     "attendees",
+    "attendeeCount",
+    "isRecurring",
     "isCancelled",
     "isOnlineMeeting",
     "onlineMeetingUrl",

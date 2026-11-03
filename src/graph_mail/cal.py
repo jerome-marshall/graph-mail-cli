@@ -150,6 +150,8 @@ def to_event(event: dict, calendar: str | None = None) -> dict:
         "location": location or None,
         "organizer": mail._address(event.get("organizer")),
         "attendees": _attendees(event.get("attendees")),
+        "attendeeCount": len(event.get("attendees") or []),
+        "isRecurring": bool(event.get("seriesMasterId")),
         "isCancelled": bool(event.get("isCancelled")),
         "isOnlineMeeting": bool(event.get("isOnlineMeeting")),
         "onlineMeetingUrl": event.get("onlineMeetingUrl"),

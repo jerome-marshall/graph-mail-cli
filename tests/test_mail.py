@@ -51,6 +51,8 @@ def test_to_item_maps_a_message():
     assert item["id"] == "AAMk-message-1"
     assert item["messageId"] == "<abc@example.com>"
     assert item["from"] == "Ada Lovelace <ada@example.com>"
+    assert item["fromName"] == "Ada Lovelace"
+    assert item["fromAddress"] == "ada@example.com"
     assert item["to"] == ["Jerome <jerome@example.com>"]
     assert item["cc"] == ["cc@example.com"]
     assert item["date"] == datetime(2026, 11, 3, 16, 53, 50, tzinfo=timezone.utc).astimezone().isoformat()
