@@ -73,6 +73,10 @@ register your own:
 graph-mail auth login
 ```
 
+On a headless machine, run `GRAPH_MAIL_NO_KEYCHAIN=1 graph-mail auth login --device-code`.
+It prints a code for `https://microsoft.com/devicelogin` and polls until you approve,
+because there is no browser on that host to receive the loopback redirect.
+
 This opens the Microsoft sign-in page. Complete it in the browser. The CLI listens on
 `http://localhost:8400/callback` for the code, exchanges it, and stores the tokens.
 
@@ -93,6 +97,7 @@ default calendar in the next seven days.
 | `graph-mail version` | Package name and version |
 | `graph-mail doctor` | Version, Python, platform, auth state, account, mail and calendar health |
 | `graph-mail auth login` | Runs the browser sign-in, then returns `authenticated` and the account |
+| `graph-mail auth login --device-code` | Headless sign-in: prints a code to enter on another device |
 | `graph-mail auth status` | Stored token state, backend, expiry, scope |
 | `graph-mail auth logout` | Deletes the stored token |
 | `graph-mail mail list` | Messages, newest first. Flags: `--mailbox`, `--after`, `--before`, `--unread`, `--limit`, `--offset` |

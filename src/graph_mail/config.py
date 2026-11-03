@@ -68,5 +68,9 @@ def token_url() -> str:
     return f"https://login.microsoftonline.com/{tenant()}/oauth2/v2.0/token"
 
 
+def devicecode_url() -> str:
+    return f"https://login.microsoftonline.com/{tenant()}/oauth2/v2.0/devicecode"
+
+
 def scope_string() -> str:
     return " ".join(SCOPES)

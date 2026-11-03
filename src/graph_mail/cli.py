@@ -114,7 +114,11 @@ def _cmd_doctor(args) -> dict:
 
 def _cmd_auth_login(args) -> dict:
     # Sign-in instructions go to stderr so stdout stays a single JSON envelope.
-    auth.login(echo=lambda msg: print(msg, file=sys.stderr))
+    echo = lambda msg: print(msg, file=sys.stderr)  # noqa: E731
+    if getattr(args, "device_code", False):
+        auth.login_device_code(echo=echo)
+    else:
+        auth.login(echo=echo)
     client = GraphClient()
     try:
         account = _account(client)
@@ -165,6 +169,12 @@ def build_parser() -> argparse.ArgumentParser:
     asub = a.add_subparsers(dest="cmd")
 
     a_login = asub.add_parser("login", parents=[out], help="sign in with the browser (PKCE)")
+    a_login.add_argument(
+        "--device-code",
+        dest="device_code",
+        action="store_true",
+        help="show a code to enter on another device (headless hosts)",
+    )
     a_login.set_defaults(func=_cmd_auth_login)
     a_status = asub.add_parser("status", parents=[out], help="show stored token state")
     a_status.set_defaults(func=_cmd_auth_status)

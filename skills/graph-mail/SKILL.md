@@ -46,6 +46,11 @@ The command prints the sign-in URL to stderr and opens the browser. It listens o
 machine. It returns once the code exchange succeeds, with `data.authenticated` true
 and `data.account` filled in.
 
+On a headless host, such as the Ubuntu VM, add `--device-code`. It prints a code to
+enter at `https://microsoft.com/devicelogin` from any browser, then waits for approval.
+Set `GRAPH_MAIL_NO_KEYCHAIN=1` there so the token lands in
+`~/.config/graph-mail/tokens.json`.
+
 ```bash
 graph-mail auth status --json     # expiry, scope, backend; never the token
 graph-mail auth logout --json     # delete the stored token

@@ -173,6 +173,20 @@ def _pkce_pair() -> tuple[str, str]:
 # --------------------------------------------------------------------------- #
 
 def _post_form(url: str, form: dict) -> dict:
+    status, payload = _post_form_raw(url, form)
+    if status != 200:
+        raise auth_failed(
+            payload.get("error_description") or payload.get("error") or "Token request failed",
+            details={"status": status, "code": payload.get("error")},
+        )
+    return payload
+
+
+def _post_form_raw(url: str, form: dict) -> tuple[int, dict]:
+    """POST a form and return (status, payload) without raising on a 4xx.
+
+    Device-code polling needs the error code from a 400, so the raw form keeps it.
+    """
     body = urllib.parse.urlencode(form).encode()
     req = urllib.request.Request(
         url,
@@ -182,17 +196,14 @@ def _post_form(url: str, form: dict) -> dict:
     )
     try:
         with urllib.request.urlopen(req, timeout=45) as resp:
-            return json.loads(resp.read().decode())
+            return resp.status, json.loads(resp.read().decode())
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode(errors="replace")
         try:
             payload = json.loads(raw)
         except json.JSONDecodeError:
             payload = {"error": f"HTTP_{exc.code}", "error_description": raw}
-        raise auth_failed(
-            payload.get("error_description") or payload.get("error") or "Token request failed",
-            details={"status": exc.code, "code": payload.get("error")},
-        ) from None
+        return exc.code, payload
     except (urllib.error.URLError, TimeoutError) as exc:
         raise GraphMailError("NETWORK_ERROR", f"Could not reach the Microsoft identity service: {exc}")
 
@@ -369,6 +380,59 @@ def _open_browser(url: str) -> None:
             subprocess.run(["xdg-open", url], check=False)
     except OSError:
         pass
+
+
+DEVICE_CODE_GRANT = "urn:ietf:params:oauth:grant-type:device_code"
+
+
+def login_device_code(*, timeout: int | None = None, echo=print, sleep=time.sleep) -> dict:
+    """Sign in on a headless host: show a code, poll until the browser approves.
+
+    The loopback flow needs the browser and the CLI on one machine. This flow does
+    not, which is what makes the CLI usable on the Ubuntu VM.
+    """
+    status, start = _post_form_raw(
+        config.devicecode_url(),
+        {"client_id": config.client_id(), "scope": config.scope_string()},
+    )
+    if status != 200:
+        raise auth_failed(
+            start.get("error_description") or start.get("error") or "Could not start device-code sign-in",
+            details={"status": status, "code": start.get("error")},
+        )
+
+    echo(start.get("message") or f"Open {start.get('verification_uri')} and enter {start.get('user_code')}")
+    echo(f"Code: {start.get('user_code')}  URL: {start.get('verification_uri')}")
+
+    deadline = time.time() + (timeout or int(start.get("expires_in", 900)))
+    interval = int(start.get("interval", 5))
+
+    while time.time() < deadline:
+        sleep(interval)
+        status, payload = _post_form_raw(
+            config.token_url(),
+            {
+                "client_id": config.client_id(),
+                "grant_type": DEVICE_CODE_GRANT,
+                "device_code": start["device_code"],
+            },
+        )
+        if status == 200:
+            record = _record_from_response(payload)
+            save_tokens(record)
+            return record
+        error = payload.get("error")
+        if error == "authorization_pending":
+            continue
+        if error == "slow_down":
+            interval += 5
+            continue
+        raise auth_failed(
+            payload.get("error_description") or error or "Device-code sign-in failed",
+            details={"code": error},
+        )
+
+    raise auth_failed("Timed out waiting for the device-code sign-in to complete.")
 
 
 # --------------------------------------------------------------------------- #
