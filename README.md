@@ -19,9 +19,9 @@ thread that has not synced yet, or a calendar another person just changed.
 
 ## Why not the CLI for Microsoft 365
 
-The community `m365` CLI (pnp/cli-microsoft365) talks to the same app registration. It
-is the right escape hatch for anything this CLI does not cover, such as writes, Teams,
-or SharePoint. It is a poor fit for an agent reading mail, for two measured reasons.
+The community `m365` CLI (pnp/cli-microsoft365) talks to the same app registration and
+covers a much wider surface. It was measured against this CLI and rejected for the read
+path, for two reasons. It is not wired in as a fallback.
 
 - `m365 outlook message list` has no limit, so it pages a whole folder. The 11,946
   message Inbox did not finish in two minutes. `graph-mail mail list --limit 20`
@@ -30,8 +30,7 @@ or SharePoint. It is a poor fit for an agent reading mail, for two measured reas
   132 KB from `m365` and 18 KB from `graph-mail`, a 7x reduction, and one draft body
   alone was 16 KB.
 
-`m365 request` reaches server-side `$search` and anything else in Graph, so the two
-tools compose. `graph-mail` exists for the common read path, not to replace it.
+Writes stay out of scope. Use the `outlook-cli` (`olk`) skill for those.
 
 ## Access model
 
