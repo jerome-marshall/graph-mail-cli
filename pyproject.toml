@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "graph-mail"
+version = "0.1.0"
+description = "Read-only, JSON-first CLI over Microsoft 365 mail and calendar via Microsoft Graph (delegated, per-user)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Jerome Marshall" }]
+keywords = ["microsoft graph", "outlook", "mail", "calendar", "cli", "read-only"]
+
+# No third-party dependencies: urllib for HTTP, hashlib/secrets for PKCE,
+# http.server for the loopback redirect, and the macOS `security` CLI for the
+# refresh token. Nothing to compile, nothing to keep running.
+dependencies = []
+
+[project.scripts]
+graph-mail = "graph_mail.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
