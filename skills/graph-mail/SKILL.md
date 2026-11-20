@@ -145,6 +145,22 @@ Call `mail read <id>` only when the user needs the body, the attachment list, or
 full recipient set. `cal list` returns times, location, organizer, attendees, and
 `preview`. Call `cal get <id>` only for the body, which may be a long meeting note.
 
+## Calendar notes
+
+- `cal list` has no search. To find the last meeting with someone, list the past window with a generous `--limit` and filter the attendee list client-side:
+
+  ```bash
+  graph-mail cal list --start 2026-10-01T00:00:00 --end 2026-11-04T23:59:59 --limit 200 --json > /tmp/cal.json
+  ```
+
+- A window includes overlapping events, so a multi-day event can start before `--start`.
+- Recurring events appear once per occurrence, each with its own start and end. Identify an event by subject, organizer, attendees and times, not by title alone.
+- `cal list` already returns times, organizer and attendees. Use `cal get` only for the body, or to trim the fields you need:
+
+  ```bash
+  graph-mail cal get <event-id> --json | jq '.data | {id,subject,start,end,organizer,attendees,location,responseStatus}'
+  ```
+
 ## Limits
 
 - Graph rejects `$search` together with `$orderby`, so search results keep Graph's own
